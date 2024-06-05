@@ -54,12 +54,15 @@ Response format:
 
 ## Streamlit App
 st.title("Hire Horizon")
-st.text("Improve Your Resume ATS")
-jd = st.text_area("Paste the Job Description")
-uploaded_file = st.file_uploader("Upload Your Resume", type=["pdf", "docx"], help="Please upload the PDF or DOCX of your resume")
-st.text("Please upload the PDF or DOCX of your Resume")
+st.text("Enhance Your Resume to Match Job Descriptions")
 
-submit = st.button("Submit")
+
+# Sidebar for inputs
+with st.sidebar:
+    jd = st.text_area("Paste the Job Description")
+    uploaded_file = st.file_uploader("Upload Your Resume", type=["pdf", "docx"], help="Please upload the PDF or DOCX of your resume")
+    st.text("Please upload the PDF or DOCX of your Resume")
+    submit = st.button("Submit")
 
 if submit:
 
@@ -70,7 +73,7 @@ if submit:
         elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
             resume_text = input_docx_text(uploaded_file)
         else:
-            st.error("Unsupported file type. Please upload a PDF or DOCX file.")
+            st.error("Unsupported file type. Please upload a PDF or DOCX file")
             resume_text = None
 
         if resume_text:
