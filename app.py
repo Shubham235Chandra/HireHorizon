@@ -52,29 +52,55 @@ Response format:
 }}
 """
 
-## Streamlit App
-st.title("Hire Horizon")
-st.text("Enhance Your Resume to Match Job Descriptions")
 
+## Streamlit App
+st.set_page_config(page_title="Hire Horizon", page_icon=":briefcase:", layout="wide")
+st.title("🎯 Hire Horizon")
+st.markdown("### Enhance Your Resume to Match Job Descriptions")
+
+# Custom CSS for sidebar
+st.markdown("""
+    <style>
+    .css-1d391kg {
+        background-color: #f0f2f6;
+    }
+    .css-1d391kg h1 {
+        color: #2c3e50;
+    }
+    .css-1d391kg textarea {
+        border-color: #2c3e50;
+    }
+    .css-1d391kg .stTextInput {
+        border-color: #2c3e50;
+    }
+    .css-1d391kg .stButton button {
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+    }
+    .css-1d391kg .stButton button:hover {
+        background-color: #34495e;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Sidebar for inputs
 with st.sidebar:
-    jd = st.text_area("Paste the Job Description")
+    st.header("Upload Your Details")
+    jd = st.text_area("Paste the Job Description", help="Paste the job description you want to match your resume to.")
     uploaded_file = st.file_uploader("Upload Your Resume", type=["pdf", "docx"], help="Please upload the PDF or DOCX of your resume")
-    st.text("Please upload the PDF or DOCX of your Resume")
     submit = st.button("Submit")
 
 if submit:
-
     if uploaded_file is not None and jd:
-
-        if uploaded_file.type == "application/pdf":
-            resume_text = input_pdf_text(uploaded_file)
-        elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            resume_text = input_docx_text(uploaded_file)
-        else:
-            st.error("Unsupported file type. Please upload a PDF or DOCX file")
-            resume_text = None
+        with st.spinner("Processing..."):
+            if uploaded_file.type == "application/pdf":
+                resume_text = input_pdf_text(uploaded_file)
+            elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                resume_text = input_docx_text(uploaded_file)
+            else:
+                st.error("Unsupported file type. Please upload a PDF or DOCX file")
+                resume_text = None
 
         if resume_text:
             response = get_gemini_response(resume_text, jd)
@@ -82,18 +108,22 @@ if submit:
                 # Try to parse the JSON response
                 response_data = json.loads(response)
                 
+                st.success("Analysis Complete!")
+                
                 # Display each component separately
-                st.subheader("Profile Summary")
+                st.subheader("📄 Profile Summary")
                 st.write(response_data['Profile Summary'] if response_data['Profile Summary'] else "No additional profile summary provided.")
 
-                st.subheader("Job Description Match")
-                st.write(f"{response_data['JD Match']} Match")
-                
-                st.subheader("Missing Keywords")
+                st.subheader("🔍 Job Description Match")
+                st.write(f"Your resume matches **{response_data['JD Match']}** of the job description.")
+
+                st.subheader("❗ Missing Keywords")
                 if response_data['Missing Keywords']:
                     st.write(response_data['Missing Keywords'])
                 else:
-                    st.write("Resume Seems Perfect")
+                    st.write("Your resume seems perfect! No missing keywords.")
                 
             except json.JSONDecodeError:
                 st.error("Failed to decode the response. The response was not in valid JSON format. Please check the model output.")
+    else:
+        st.error("Please make sure both the job description and resume are provided.")
